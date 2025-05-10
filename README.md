@@ -133,3 +133,9 @@ Some parts of the project are intentionally cut out to avoid illegal use. This i
 * [https://www.infosecinstitute.com/resources/hacking/hashcat-tutorial-beginners/] — parsing dictionary, mask, hybrid and brute force attacks with Hashcat
 * [https://hashcat.net/wiki/doku.php?id=rule\_based\_attack] — official documentation on the use of rule sets for dictionary mutation in Hashcat
 * [https://www.youtube.com/watch?v=bgErbtSW1mw] — step-by-step guide to creating and enforcing own rules
+* [https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/examples-s3.html] - ready-made C++ code snippets for interaction with Amazon S3 via AWS SDK
+* [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10528539/] - overview of modern approaches to password guessing
+* [https://www.researchgate.net/publication/345398833\_Research\_on\_Password\_C_Cracking\_Technology\_Based\_on\_Improved\_Transformer] - applying Transformers to the password guessing problem
+*  [https://developer.nvidia.com/management-library-nvml] - official guide to the NVIDIA Management Library (NVML) API for monitoring and controlling the GPU.
+* [https://github.com/mnicely/nvml\_examples] - high-frequency GPU monitoring using NVML
+
