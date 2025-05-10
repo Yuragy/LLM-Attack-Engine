@@ -25,9 +25,9 @@ Allows you to launch attacks, manage configuration, dictionaries, view logs and 
 
 - Launch a dictionary attack:
   
- "./password_attack_framework --attack dictionary \
+ ./password_attack_framework --attack dictionary \
       --dictionary path/to/dictionary.txt \.
-      --target target_identifier"
+      --target target_identifier
       
 - View logs:
 ./password_attack_framework --view-logs
