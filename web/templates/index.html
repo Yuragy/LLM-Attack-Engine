@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Добро пожаловать</h1>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Управление атаками
+            </div>
+            <div class="card-body">
+                <p class="card-text">Запускайте и управляйте атаками.</p>
+                <a href="/attack" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Логи
+            </div>
+            <div class="card-body">
+                <p class="card-text">Просматривайте и анализируйте логи.</p>
+                <a href="/logs" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Планирование задач
+            </div>
+            <div class="card-body">
+                <p class="card-text">Планируйте и управляйте задачами.</p>
+                <a href="/schedule" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Статистика атак
+            </div>
+            <div class="card-body">
+                <canvas id="attackChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Статистика логов
+            </div>
+            <div class="card-body">
+                <canvas id="logChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                Последние действия
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Действие</th>
+                            <th>Пользователь</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentActivities">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                Команды CLI
+            </div>
+            <div class="card-body">
+                <h5>Основные команды CLI</h5>
+                <ul>
+                    <li><strong>Запуск атаки:</strong> <code>program start --type=brute_force --param=password123</code></li>
+                    <li><strong>Загрузка словаря:</strong> <code>program dictionary --load=/path/to/dictionary.txt</code></li>
+                    <li><strong>Настройка конфигурации:</strong> <code>program config --set=log_level --value=DEBUG</code></li>
+                    <li><strong>Генерация отчета по аналитике:</strong> <code>program analytics --generate_report --type=summary</code></li>
+                </ul>
+                <a href="/cli_guide" class="btn btn-warning">Подробнее о CLI</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                Обратная связь
+            </div>
+            <div class="card-body">
+                <form id="feedbackForm">
+                    <div class="form-group">
+                        <label for="feedback">Ваше мнение</label>
+                        <textarea class="form-control" id="feedback" name="feedback" rows="3" placeholder="Введите ваши комментарии или предложения" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                Опрос
+            </div>
+            <div class="card-body">
+                <form id="surveyForm">
+                    <div class="form-group">
+                        <label for="surveyQuestion">Насколько вы удовлетворены нашим сервисом?</label>
+                        <select class="form-control" id="surveyQuestion" name="surveyQuestion" required>
+                            <option value="1">1 - Очень неудовлетворен</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5 - Очень удовлетворен</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-dark">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentActivities();
+        loadCharts();
+        setupFeedbackForm();
+        setupSurveyForm();
+    });
+
+    function loadRecentActivities() {
+        fetch('/api/recent_activities')
+        .then(response => response.json())
+        .then(data => {
+            const recentActivities = document.getElementById('recentActivities');
+            recentActivities.innerHTML = '';
+            data.activities.forEach(activity => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${activity.date}</td><td>${activity.action}</td><td>${activity.user}</td><td>${activity.description}</td>`;
+                recentActivities.appendChild(tr);
+            });
+        })
+        .catch(error => console.error('Error loading recent activities:', error));
+    }
+
+    function loadCharts() {
+        fetch('/api/attack_stats')
+        .then(response => response.json())
+        .then(data => {
+            const attackCtx = document.getElementById('attackChart').getContext('2d');
+            new Chart(attackCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Атаки',
+                        data: data.values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading attack stats:', error));
+
+        fetch('/api/log_stats')
+        .then(response => response.json())
+        .then(data => {
+            const logCtx = document.getElementById('logChart').getContext('2d');
+            new Chart(logCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Логи',
+                        data: data.values,
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading log stats:', error));
+    }
+
+    function setupFeedbackForm() {
+        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const feedback = document.getElementById('feedback').value;
+            sendFeedback(feedback);
+        });
+    }
+
+    function sendFeedback(feedback) {
+        fetch('/api/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ feedback })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Спасибо за ваш отзыв!');
+                document.getElementById('feedbackForm').reset();
+            } else {
+                alert('Не удалось отправить отзыв.');
+            }
+        })
+        .catch(error => console.error('Error sending feedback:', error));
+    }
+
+    function setupSurveyForm() {
+        document.getElementById('surveyForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const surveyResponse = document.getElementById('surveyQuestion').value;
+            sendSurveyResponse(surveyResponse);
+        });
+    }
+
+    function sendSurveyResponse(response) {
+        fetch('/api/survey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ response })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Спасибо за ваше участие в опросе!');
+                document.getElementById('surveyForm').reset();
+            } else {
+                alert('Не удалось отправить ответ на опрос.');
+            }
+        })
+        .catch(error => console.error('Error sending survey response:', error));
+    }
+</script>
+{% endblock %}
+
+

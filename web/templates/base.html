@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Система управления атаками и логами">
+    <meta name="author" content="My Project Team">
+    <meta name="keywords" content="управление атаками, логирование, планирование задач, управление пользователями">
+    <meta property="og:title" content="My Project">
+    <meta property="og:description" content="Система управления атаками и логами">
+    <meta property="og:image" content="URL изображения вашего проекта">
+    <meta property="og:url" content="URL вашего проекта">
+    <title>My Project</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <header class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">My Project</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">{% trans "Главная" %}</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="attackDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans "Управление атаками" %}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="attackDropdown">
+                        <a class="dropdown-item" href="/attack">{% trans "Запуск атаки" %}</a>
+                        <a class="dropdown-item" href="/attack/history">{% trans "История атак" %}</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logs">{% trans "Логи" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/schedule">{% trans "Планирование" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user_management">{% trans "Пользователи" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/reports">{% trans "Отчеты" %}</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="themeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans "Тема" %}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="themeDropdown">
+                        <a class="dropdown-item" href="#" onclick="setTheme('light')">{% trans "Светлая" %}</a>
+                        <a class="dropdown-item" href="#" onclick="setTheme('dark')">{% trans "Темная" %}</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans "Язык" %}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="languageDropdown">
+                        <a class="dropdown-item" href="/set_language?lang=ru">Русский</a>
+                        <a class="dropdown-item" href="/set_language?lang=en">English</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </header>
+    <main class="container mt-4">
+        <div id="alerts" class="mt-2">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer bg-dark text-white mt-4">
+        <div class="container text-center py-3">
+            <p>&copy; 2024 My Project | <a href="/privacy" class="text-white">{% trans "Политика конфиденциальности" %}</a></p>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">{% trans "Подтверждение действия" %}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {% trans "Вы уверены, что хотите выполнить это действие?" %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Отмена" %}</button>
+                    <button type="button" class="btn btn-primary" id="confirmModalButton">{% trans "Подтвердить" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            document.cookie = `theme=${theme};path=/;max-age=31536000`;
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeCookie = document.cookie.split('; ').find(row => row.startsWith('theme='));
+            const theme = themeCookie ? themeCookie.split('=')[1] : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            const eventSource = new EventSource('/notifications');
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                showNotification(data.message, data.type);
+            };
+        });
+
+        function showNotification(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.role = 'alert';
+            alertDiv.textContent = message;
+            document.getElementById('alerts').appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function getCSRFToken() {
+            const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrf_token='));
+            return csrfCookie ? csrfCookie.split('=')[1] : '';
+        }
+
+        $('#confirmModalButton').on('click', function() {
+            $('#confirmModal').modal('hide');
+            axios.post('/api/confirm_action', {
+                csrf_token: getCSRFToken()
+            }).then(response => {
+                showNotification(response.data.message, 'success');
+            }).catch(error => {
+                showNotification('Произошла ошибка при выполнении действия.', 'danger');
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+

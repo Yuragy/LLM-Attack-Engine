@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Отчеты</h1>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Генерация отчета
+            </div>
+            <div class="card-body">
+                <form id="generateReportForm">
+                    <div class="form-group">
+                        <label for="reportType">Тип отчета</label>
+                        <select class="form-control" id="reportType" name="reportType" required>
+                            <option value="attack_success">Успешность атак</option>
+                            <option value="resource_usage">Использование ресурсов</option>
+                            <option value="system_status">Состояние системы</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reportTimePeriod">Период времени</label>
+                        <select class="form-control" id="reportTimePeriod" name="reportTimePeriod" required>
+                            <option value="last_24_hours">Последние 24 часа</option>
+                            <option value="last_7_days">Последние 7 дней</option>
+                            <option value="last_30_days">Последние 30 дней</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сгенерировать отчет</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Отчеты
+            </div>
+            <div class="card-body">
+                <div id="reportsContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReports();
+    });
+    document.getElementById('generateReportForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const reportType = document.getElementById('reportType').value;
+        const reportTimePeriod = document.getElementById('reportTimePeriod').value;
+
+        fetch('/api/generate_report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reportType, reportTimePeriod })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayReport(data.report);
+                showNotification('Отчет успешно сгенерирован', 'success');
+            } else {
+                showNotification('Не удалось сгенерировать отчет', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error generating report:', error);
+            showNotification('Ошибка при генерации отчета', 'danger');
+        });
+    });
+
+    function displayReport(report) {
+        const reportsContainer = document.getElementById('reportsContainer');
+        const reportElement = document.createElement('div');
+        reportElement.className = 'report card mb-4';
+        reportElement.innerHTML = `
+            <div class="card-header">
+                <h3>${report.title}</h3>
+                <button class="btn btn-danger float-right ml-2" onclick="deleteReport('${report.id}')">Удалить</button>
+                <button class="btn btn-warning float-right" onclick="editReport('${report.id}')">Редактировать</button>
+            </div>
+            <div class="card-body">
+                <p>${report.description}</p>
+                <canvas id="reportChart-${report.id}"></canvas>
+                <button class="btn btn-success mt-2" onclick="exportReport('${report.id}', 'pdf')">Экспорт в PDF</button>
+                <button class="btn btn-secondary mt-2" onclick="exportReport('${report.id}', 'csv')">Экспорт в CSV</button>
+            </div>
+        `;
+        reportsContainer.appendChild(reportElement);
+
+        var ctx = document.getElementById(`reportChart-${report.id}`).getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: report.labels,
+                datasets: [{
+                    label: report.title,
+                    data: report.data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: report.title
+                    }
+                }
+            }
+        });
+    }
+
+    function loadReports() {
+        fetch('/api/reports')
+        .then(response => response.json())
+        .then(data => {
+            const reportsContainer = document.getElementById('reportsContainer');
+            reportsContainer.innerHTML = '';
+            data.reports.forEach(report => {
+                displayReport(report);
+            });
+        })
+        .catch(error => console.error('Error loading reports:', error));
+    }
+
+    function exportReport(reportId, format) {
+        fetch(`/api/export_report?reportId=${reportId}&format=${format}`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `report_${reportId}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => console.error('Error exporting report:', error));
+    }
+
+    function deleteReport(reportId) {
+        fetch(`/api/delete_report?reportId=${reportId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadReports();
+                showNotification('Отчет успешно удален', 'success');
+            } else {
+                showNotification('Не удалось удалить отчет', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting report:', error);
+            showNotification('Ошибка при удалении отчета', 'danger');
+        });
+    }
+
+
+    function editReport(reportId) {
+        showNotification('Функция редактирования в разработке', 'info');
+    }
+    function showNotification(message, type) {
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type}`;
+        notification.textContent = message;
+        notificationsContainer.appendChild(notification);
+        setTimeout(() => {
+            notificationsContainer.removeChild(notification);
+        }, 3000);
+    }
+</script>
+
+<div id="notificationsContainer" class="mt-3"></div>
+{% endblock %}
+
+

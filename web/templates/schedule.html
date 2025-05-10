@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Планирование задач</h1>
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Добавление новой задачи
+            </div>
+            <div class="card-body">
+                <form id="addTaskForm">
+                    <div class="form-group">
+                        <label for="taskName">Название задачи</label>
+                        <input type="text" class="form-control" id="taskName" name="taskName" placeholder="Введите название задачи" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">Описание задачи</label>
+                        <textarea class="form-control" id="taskDescription" name="taskDescription" placeholder="Введите описание задачи" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskTime">Время выполнения</label>
+                        <input type="datetime-local" class="form-control" id="taskTime" name="taskTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskRecurring">Повторяющаяся задача</label>
+                        <select class="form-control" id="taskRecurring" name="taskRecurring" required>
+                            <option value="none">Не повторяется</option>
+                            <option value="daily">Ежедневно</option>
+                            <option value="weekly">Еженедельно</option>
+                            <option value="monthly">Ежемесячно</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить задачу</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Запланированные задачи
+            </div>
+            <div class="card-body">
+                <ul id="scheduledTasks" class="list-group">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                Календарь задач
+            </div>
+            <div class="card-body">
+                <div id="tasksCalendar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                Отчеты по выполненным задачам
+            </div>
+            <div class="card-body">
+                <button class="btn btn-secondary" onclick="generateTaskReport('pdf')">Экспорт в PDF</button>
+                <button class="btn btn-secondary" onclick="generateTaskReport('csv')">Экспорт в CSV</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+
+<script>
+    document.getElementById('addTaskForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const taskName = document.getElementById('taskName').value;
+        const taskDescription = document.getElementById('taskDescription').value;
+        const taskTime = document.getElementById('taskTime').value;
+        const taskRecurring = document.getElementById('taskRecurring').value;
+        
+        fetch('/api/add_task', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: taskName, description: taskDescription, time: taskTime, recurring: taskRecurring })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Задача успешно добавлена!');
+                loadScheduledTasks();
+                updateCalendar();
+                scheduleNotification(taskName, taskTime);
+            } else {
+                alert('Не удалось добавить задачу.');
+            }
+        })
+        .catch(error => console.error('Error adding task:', error));
+    });
+
+    function deleteTask(taskId) {
+        fetch(`/api/delete_task?id=${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Задача успешно удалена!');
+                loadScheduledTasks();
+                updateCalendar();
+            } else {
+                alert('Не удалось удалить задачу.');
+            }
+        })
+        .catch(error => console.error('Error deleting task:', error));
+    }
+
+    function loadScheduledTasks() {
+        fetch('/api/scheduled_tasks')
+        .then(response => response.json())
+        .then(data => {
+            const scheduledTasks = document.getElementById('scheduledTasks');
+            scheduledTasks.innerHTML = '';
+            data.tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `<strong>${task.name}</strong><p>${task.description}</p><small>Запланировано на: ${task.time} (${task.recurring})</small><button class="btn btn-danger btn-sm float-right" onclick="deleteTask(${task.id})">Удалить</button>`;
+                scheduledTasks.appendChild(li);
+            });
+        })
+        .catch(error => console.error('Error loading scheduled tasks:', error));
+    }
+
+    function updateCalendar() {
+        fetch('/api/scheduled_tasks')
+        .then(response => response.json())
+        .then(data => {
+            const events = data.tasks.map(task => {
+                return {
+                    title: task.name,
+                    start: task.time,
+                    description: task.description
+                };
+            });
+            const calendarEl = document.getElementById('tasksCalendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: events,
+                eventClick: function(info) {
+                    alert('Задача: ' + info.event.title + '\nОписание: ' + info.event.extendedProps.description);
+                }
+            });
+            calendar.render();
+        })
+        .catch(error => console.error('Error updating calendar:', error));
+    }
+
+    function generateTaskReport(format) {
+        fetch(`/api/generate_task_report?format=${format}`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `task_report.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => console.error('Error generating task report:', error));
+    }
+
+    function scheduleNotification(taskName, taskTime) {
+        const notificationTime = new Date(taskTime).getTime() - (15 * 60 * 1000); // 15 минут до задачи
+        const now = new Date().getTime();
+        const delay = notificationTime - now;
+
+        if (delay > 0) {
+            setTimeout(() => {
+                new Notification(`Напоминание о задаче: ${taskName}`);
+            }, delay);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+
+        loadScheduledTasks();
+        updateCalendar();
+        var tasksData = {
+            labels: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь"],
+            datasets: [{
+                label: 'Количество задач',
+                data: [5, 10, 15, 20, 25, 30],
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        var ctx = document.getElementById('tasksChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: tasksData,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+    function syncWithExternalSystem(system) {
+        fetch(`/api/sync_with_${system}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Синхронизация с ${system} успешно выполнена!`);
+            } else {
+                alert(`Не удалось синхронизироваться с ${system}.`);
+            }
+        })
+        .catch(error => console.error(`Error syncing with ${system}:`, error));
+    }
+    const syncGoogleButton = document.createElement('button');
+    syncGoogleButton.className = 'btn btn-secondary mt-2';
+    syncGoogleButton.textContent = 'Синхронизация с Google';
+    syncGoogleButton.onclick = () => syncWithExternalSystem('google');
+    document.querySelector('.card-body').appendChild(syncGoogleButton);
+
+    const syncOutlookButton = document.createElement('button');
+    syncOutlookButton.className = 'btn btn-secondary mt-2';
+    syncOutlookButton.textContent = 'Синхронизация с Outlook';
+    syncOutlookButton.onclick = () => syncWithExternalSystem('outlook');
+    document.querySelector('.card-body').appendChild(syncOutlookButton);
+</script>
+{% endblock %}
+
+

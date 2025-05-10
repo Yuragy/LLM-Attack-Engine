@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Вход в систему</h4>
+                </div>
+                <div class="card-body">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="username">Имя пользователя</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Введите имя пользователя" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Пароль</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Введите пароль" required>
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Запомнить меня</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="totp">Код 2FA</label>
+                            <input type="text" class="form-control" id="totp" name="totp" placeholder="Введите код двухфакторной аутентификации" required>
+                        </div>
+                        <div class="form-group">
+                            <div class="g-recaptcha" data-sitekey="your-site-key"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+                    </form>
+                    <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="/reset_password">Забыли пароль?</a> |
+                    <a href="/help">Помощь/Поддержка</a>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <p>Или войдите с помощью:</p>
+                <button class="btn btn-outline-dark" onclick="socialLogin('google')">Google</button>
+                <button class="btn btn-outline-dark" onclick="socialLogin('facebook')">Facebook</button>
+                <button class="btn btn-outline-dark" onclick="socialLogin('github')">GitHub</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        const totp = document.getElementById('totp').value;
+        const captcha = grecaptcha.getResponse();
+        login(username, password, rememberMe, totp, captcha);
+    });
+
+    function login(username, password, rememberMe, totp, captcha) {
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({ username, password, rememberMe, totp, captcha })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/dashboard';
+            } else {
+                displayError(data.message);
+                grecaptcha.reset(); 
+            }
+        })
+        .catch(error => {
+            displayError('Произошла ошибка. Пожалуйста, попробуйте еще раз.');
+            grecaptcha.reset(); 
+        });
+    }
+
+    function socialLogin(provider) {
+        window.location.href = `/auth/${provider}`;
+    }
+
+    function displayError(message) {
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = message;
+    }
+
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                return cookie.substring(name.length + 1);
+            }
+        }
+        return '';
+    }
+</script>
+{% endblock %}
+
+
+

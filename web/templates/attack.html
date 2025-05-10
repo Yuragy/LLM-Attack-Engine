@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Управление атаками</h1>
+<p>На этой странице вы можете запускать новые атаки, просматривать активные атаки и историю атак, а также управлять параметрами атак.</p>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Запуск новой атаки
+            </div>
+            <div class="card-body">
+                <form id="startAttackForm">
+                    <div class="form-group">
+                        <label for="attackType">Тип атаки</label>
+                        <select class="form-control" id="attackType" name="attackType" required>
+                            <option value="brute_force">Brute Force</option>
+                            <option value="dictionary">Dictionary</option>
+                            <option value="mask">Mask</option>
+                            <option value="rule_based">Rule-Based</option>
+                            <option value="phishing">Phishing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="attackParams">Параметры атаки</label>
+                        <textarea class="form-control" id="attackParams" name="attackParams" placeholder="Введите параметры атаки" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Запустить атаку</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Активные атаки
+            </div>
+            <div class="card-body">
+                <ul id="activeAttacks" class="list-group">
+                </ul>
+                <button class="btn btn-danger mt-3" onclick="stopAllAttacks()">Остановить все атаки</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                История атак
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип атаки</th>
+                            <th>Параметры</th>
+                            <th>Результат</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attackHistory">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                Графики производительности атак
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                Отчеты по атакам
+            </div>
+            <div class="card-body">
+                <button class="btn btn-secondary" onclick="exportAttackReport('pdf')">Экспорт в PDF</button>
+                <button class="btn btn-secondary" onclick="exportAttackReport('csv')">Экспорт в CSV</button>
+                <button class="btn btn-secondary" onclick="exportAttackReport('json')">Экспорт в JSON</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    document.getElementById('startAttackForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const attackType = document.getElementById('attackType').value;
+        const attackParams = document.getElementById('attackParams').value;
+        startAttack(attackType, attackParams);
+    });
+
+    function startAttack(attackType, attackParams) {
+        fetch('/api/start_attack', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': getCSRFToken()
+            },
+            body: JSON.stringify({ type: attackType, params: attackParams })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Атака успешно запущена!');
+                loadActiveAttacks();
+                loadAttackHistory();
+                visualizeAttack(data.attack);
+            } else {
+                alert('Не удалось запустить атаку.');
+            }
+        })
+        .catch(error => {
+            console.error('Error starting attack:', error);
+            alert('Произошла ошибка при запуске атаки.');
+        });
+    }
+
+    function stopAllAttacks() {
+        fetch('/api/stop_all_attacks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Все атаки успешно остановлены!');
+                loadActiveAttacks();
+            } else {
+                alert('Не удалось остановить атаки.');
+            }
+        })
+        .catch(error => {
+            console.error('Error stopping attacks:', error);
+            alert('Произошла ошибка при остановке атак.');
+        });
+    }
+
+    function loadActiveAttacks() {
+        fetch('/api/active_attacks')
+        .then(response => response.json())
+        .then(data => {
+            const activeAttacks = document.getElementById('activeAttacks');
+            activeAttacks.innerHTML = '';
+            data.attacks.forEach(attack => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = `${attack.type} на систему ${attack.target} (ID: ${attack.id})`;
+                li.appendChild(createActionButton('Остановить', () => stopAttack(attack.id)));
+                activeAttacks.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading active attacks:', error);
+        });
+    }
+
+    function loadAttackHistory() {
+        fetch('/api/attack_history')
+        .then(response => response.json())
+        .then(data => {
+            const attackHistory = document.getElementById('attackHistory');
+            attackHistory.innerHTML = '';
+            data.history.forEach(attack => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${attack.date}</td><td>${attack.type}</td><td>${attack.params}</td><td>${attack.result}</td>`;
+                tr.appendChild(createActionButton('Удалить', () => deleteAttack(attack.id)));
+                attackHistory.appendChild(tr);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading attack history:', error);
+        });
+    }
+
+    function stopAttack(attackId) {
+        fetch(`/api/stop_attack?id=${attackId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Атака успешно остановлена!');
+                loadActiveAttacks();
+            } else {
+                alert('Не удалось остановить атаку.');
+            }
+        })
+        .catch(error => {
+            console.error('Error stopping attack:', error);
+            alert('Произошла ошибка при остановке атаки.');
+        });
+    }
+
+    function deleteAttack(attackId) {
+        fetch(`/api/delete_attack?id=${attackId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Атака успешно удалена!');
+                loadAttackHistory();
+            } else {
+                alert('Не удалось удалить атаку.');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting attack:', error);
+            alert('Произошла ошибка при удалении атаки.');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadActiveAttacks();
+        loadAttackHistory();
+        setupWebSocket();
+
+        const performanceData = {
+            labels: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь"],
+            datasets: [{
+                label: 'Количество атак',
+                data: [10, 20, 30, 40, 50, 60],
+                backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: performanceData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+    function setupWebSocket() {
+        const socket = new WebSocket('ws://localhost:8000/ws/attacks/');
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateRealTimeData(data);
+        };
+        socket.onclose = function(event) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    }
+
+    function updateRealTimeData(data) {
+        loadActiveAttacks();
+        loadAttackHistory();
+    }
+
+    function visualizeAttack(attack) {
+        const svg = d3.select("#attackVisualization").append("svg")
+            .attr("width", 500)
+            .attr("height", 500);
+
+        svg.append("circle")
+            .attr("cx", 250)
+            .attr("cy", 250)
+            .attr("r", 40)
+            .style("fill", "blue");
+
+        svg.append("text")
+            .attr("x", 250)
+            .attr("y", 250)
+            .attr("text-anchor", "middle")
+            .attr("dy", ".35em")
+            .text(attack.type);
+    }
+
+    function createActionButton(text, action) {
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm btn-outline-danger ml-2';
+        button.textContent = text;
+        button.addEventListener('click', action);
+        return button;
+    }
+
+    function exportAttackReport(format) {
+        fetch(`/api/export_attack_report?format=${format}`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `attack_report.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => console.error('Error exporting attack report:', error));
+    }
+
+    function getCSRFToken() {
+        let csrfToken = null;
+        const cookies = document.cookie.split(';');
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrf_token') {
+                csrfToken = value;
+            }
+        });
+        return csrfToken;
+    }
+</script>
+
+<style>
+    #attackVisualization {
+        margin-top: 20px;
+        text-align: center;
+    }
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header .btn {
+        margin-left: auto;
+    }
+</style>
+
+<div id="attackVisualization"></div>
+{% endblock %}
+
+
+
+
