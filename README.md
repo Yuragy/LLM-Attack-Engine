@@ -117,3 +117,14 @@ In the web interface are available:
 - GPUUtils: interaction with NVML, task allocation to GPUs, collection of load, temperature, memory metrics.
 
 Some parts of the project are intentionally cut out to avoid illegal use. This is a demonstration of the use of ML models in a centralized tool for sophisticated attacks.
+
+## Example of the attack process
+
+1. A user via CLI or web interface launches a dictionary attack against a specific target.
+2. AttackEngine receives the command, initializes resources.
+3. RuleEngine applies rules to the dictionary, generating a list of candidates for attack.
+4. GPUManager distributes candidates among multiple GPUs for parallel verification.
+5. Monitor collects execution metrics, Logger records the progress of the attack in logs.
+6. User stops/pauses the attack if necessary (stopAttack(), pauseAttack()).
+7. Scheduler can periodically launch similar attacks on other targets or back up the base.
+8. DBManager stores results, logs, statistics in the database, and generates a report at the end if desired.
