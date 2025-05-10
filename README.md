@@ -131,3 +131,5 @@ Some parts of the project are intentionally cut out to avoid illegal use. This i
 
 ## Resources used for work
 * [https://www.infosecinstitute.com/resources/hacking/hashcat-tutorial-beginners/] — parsing dictionary, mask, hybrid and brute force attacks with Hashcat
+* [https://hashcat.net/wiki/doku.php?id=rule\_based\_attack] — official documentation on the use of rule sets for dictionary mutation in Hashcat
+* [https://www.youtube.com/watch?v=bgErbtSW1mw] — step-by-step guide to creating and enforcing own rules
