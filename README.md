@@ -31,6 +31,14 @@ Allows you to launch attacks, manage configuration, dictionaries, view logs and 
 
 Then open http://localhost:8080 in a browser (the port can be specified in the configuration). 
 
+## Configuration
+All configuration files are located in the config/ folder:
+- config.json - basic parameters (logging, web server ports, dictionary paths, etc.).  
+- monitoring_config.json - monitoring module settings (polling frequency, integration with Prometheus/Grafana).  
+- db_config.json - database settings (address, login/password, connection parameters).  
+- encryption_keys.json - example of secure storage of encryption keys.
+
+
 In the web interface are available:
 - Configuring and launching attacks.  
 - Viewing and filtering logs, graphics.  
