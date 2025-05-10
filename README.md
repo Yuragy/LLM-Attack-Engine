@@ -30,9 +30,11 @@ Allows you to launch attacks, manage configuration, dictionaries, view logs and 
       --target target_identifier
       
 - View logs:
+- 
 ./password_attack_framework --view-logs
 
 Start the web server:
+
 ./password_attack_framework --start-web
 
 Then open http://localhost:8080 in a browser (the port can be specified in the configuration). 
