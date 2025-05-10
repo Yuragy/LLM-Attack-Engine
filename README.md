@@ -1,5 +1,22 @@
-# Welcome to GitHub Desktop!
 
-This is your README. READMEs are where you can communicate what your project is and how to use it.
 
-Write your name on line 6, save it, and then head back to GitHub Desktop.
+### Features
+- Various attack methods: dictionary attacks, brute force, masks, rules, etc.
+- Dictionary and rule management: support for downloading dictionaries, applying custom and leaked dictionaries, and flexible RuleEngine.
+- Web interface: easy-to-use web panel for customizing attacks, viewing logs, and scheduling tasks.
+- CLI: powerful command line for fine-grained configuration and automation.
+- Monitoring and notifications: real-time tracking of attack progress, sending notifications (email, SMS, push).
+- Cloud integration: store and manage data in AWS S3, GCS, and more.
+- User management: creation and administration of roles, profiles, 2FA, etc.
+- Machine learning: training (MLModelTrainer) and prediction (MLPredictor) modules to improve the effectiveness of attacks.
+- Adaptive attacks: change strategy in real time based on target behavior.
+- Data recovery: backup and automatic recovery.
+
+### Required Components
+1. CMake
+2. GCC or Clang (C++) 
+3. libraries:  
+   - Boost  
+   - OpenSSL 
+   - NVML  
+   - pugiXML, YAML.  
