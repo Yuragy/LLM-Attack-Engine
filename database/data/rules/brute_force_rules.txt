@@ -1,0 +1,3 @@
+increment_digits
+append_special_char
+replace_vowels

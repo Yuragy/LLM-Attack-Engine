@@ -1,0 +1,3 @@
+predict_next_char
+generate_sequence
+apply_probability

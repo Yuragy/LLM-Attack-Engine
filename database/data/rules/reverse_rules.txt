@@ -1,0 +1,3 @@
+reverse_strings
+apply_md5_hash
+compare_hashes

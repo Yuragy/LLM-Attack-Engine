@@ -1,0 +1,85 @@
+{
+    "db_connection_string": "server=localhost;user=root;password=admin;database=mydb",
+    "dictionary_path": "data/dictionaries",
+    "rules_path": "data/rules",
+    "attack": {
+        "thread_count": 10
+    },
+    "monitoring": {
+        "frequency": 5
+    },
+    "scheduler": {
+        "max_tasks": 20
+    },
+    "webapp": {
+        "port": 8080
+    },
+    "cloud": {
+        "timeout": 300,
+        "api_url": "https://api.cloudservice.com",
+        "auth_token": "token"
+    },
+    "user_management": {
+        "max_users": 500
+    },
+    "notification": {
+        "enabled": true,
+        "email_server": "smtp.mailserver.com",
+        "sms_gateway": "https://sms.gateway.com",
+        "push_server": "https://push.server.com",
+        "api_keys": "api_keys"
+    },
+    "analytics": {
+        "reporting_interval": 60
+    },
+    "rule": {
+        "max_rules": 100
+    },
+    "gpu": {
+        "max_memory_usage": 0.8,
+        "monitoring_enabled": true
+    },
+    "ml": {
+        "training_iterations": 1000
+    },
+    "log": {
+        "level": "info"
+    },
+    "db_manager": {
+        "connection_timeout": 30,
+        "pool_size": 10
+    },
+    "auth": {
+        "two_factor_enabled": true,
+        "social_login": true
+    },
+    "api": {
+        "version": "v1",
+        "base_url": "https://api.com"
+    },
+    "social_engineering": {
+        "data_sources": ["facebook", "twitter", "linkedin"]
+    },
+    "machine_learning": {
+        "model_path": "models/ml_model.bin"
+    },
+    "adaptive_attack": {
+        "strategy": "dynamic"
+    },
+    "recovery": {
+        "auto_backup": true
+    },
+    "utils": {
+        "cache_size": 1024
+    },
+    "policy": {
+        "password_expiration_days": 90
+    },
+    "notifications": {
+        "send_email_on_failure": true
+    },
+    "targets": {
+        "default_target": "localhost"
+    }
+}
+ 

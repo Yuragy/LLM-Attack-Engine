@@ -1,0 +1,3 @@
+permute_words
+append_suffix
+prepend_prefix

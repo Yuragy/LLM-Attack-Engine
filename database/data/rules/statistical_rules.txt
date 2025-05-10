@@ -1,0 +1,3 @@
+apply_statistics
+generate_common_patterns
+adjust_probabilities

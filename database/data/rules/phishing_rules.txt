@@ -1,0 +1,3 @@
+add_login_form
+add_tracking_pixel
+customize_message

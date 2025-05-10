@@ -1,0 +1,3 @@
+generate_patterns
+apply_template
+substitute_characters

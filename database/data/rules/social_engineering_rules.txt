@@ -1,0 +1,3 @@
+collect_personal_info
+apply_social_patterns
+generate_phishing_content

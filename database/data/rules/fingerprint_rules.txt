@@ -1,0 +1,3 @@
+normalize_data
+encode_data
+apply_hash

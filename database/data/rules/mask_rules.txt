@@ -1,0 +1,3 @@
+generate_masked_passwords
+apply_case_variation
+append_digits

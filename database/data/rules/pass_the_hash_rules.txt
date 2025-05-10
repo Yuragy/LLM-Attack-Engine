@@ -1,0 +1,3 @@
+hash_variation
+add_salt_to_hash
+apply_md5
