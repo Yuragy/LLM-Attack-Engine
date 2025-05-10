@@ -1,4 +1,4 @@
-
+Сentralized framework for launching and managing a wide range of password attacks (dictionary, brute force, masks, rules and others), with CLI and web panel, monitoring, task scheduler, cloud integration and ML modules to improve efficiency.
 
 ### Features
 - Various attack methods: dictionary attacks, brute force, masks, rules, etc.
