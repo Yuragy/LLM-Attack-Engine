@@ -45,3 +45,26 @@ In the web interface are available:
 - Task scheduling (Scheduler).  
 - User management (creation, deletion, role assignment).  
 - Data export/import.
+
+# Internal Architecture
+
+### Attack Engine
+- Functions: logic of different types of attacks (dictionary, brute force, mask, rule-based, etc.).
+- Operation: initializes GPU (via GPUManager), loads dictionaries (DictionaryLoader), applies rules (RuleEngine).
+- Status: can start/stop/pause/resume, collect metrics, logging.
+
+### Target Interface and Target Factory
+
+- TargetInterface describes the methods that each “target” module must implement: initialization, attack launch, logging, status.
+- TargetFactory creates an object of the desired target type (e.g. MetaMaskTarget, ExodusTarget, ElectrumTarget) at the request of AttackEngine.
+
+### Database module
+
+- Connects to the database, executes SQL queries, manages sessions, caching, backups, restores.
+- Stores data about users, dictionaries, roles, logs, etc.
+- Can encrypt data (AES/OpenSSL), log operations, real-time monitoring.
+
+### Machine Learning
+
+- MLPredictor: load trained models, predictions, accuracy assessment, interpretation.
+- MLModelTrainer: training new models, tuning hyperparameters, cross-validation.
