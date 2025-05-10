@@ -110,3 +110,10 @@ In the web interface are available:
 - Serialization/deserialization of JSON, XML, YAML.
 - Data structure validation, filtering, sorting.
 - Format conversion for export/import.
+
+### ThreadingUtils / GPUtils
+
+- ThreadingUtils: multithreaded task distribution, prioritized queues, scheduling strategies.
+- GPUUtils: interaction with NVML, task allocation to GPUs, collection of load, temperature, memory metrics.
+
+Some parts of the project are intentionally cut out to avoid illegal use. This is a demonstration of the use of ML models in a centralized tool for sophisticated attacks.
