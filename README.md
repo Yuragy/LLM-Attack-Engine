@@ -128,3 +128,6 @@ Some parts of the project are intentionally cut out to avoid illegal use. This i
 6. User stops/pauses the attack if necessary (stopAttack(), pauseAttack()).
 7. Scheduler can periodically launch similar attacks on other targets or back up the base.
 8. DBManager stores results, logs, statistics in the database, and generates a report at the end if desired.
+
+## Resources used for work
+* [https://www.infosecinstitute.com/resources/hacking/hashcat-tutorial-beginners/] — parsing dictionary, mask, hybrid and brute force attacks with Hashcat
