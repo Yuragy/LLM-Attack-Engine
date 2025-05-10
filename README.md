@@ -68,3 +68,45 @@ In the web interface are available:
 
 - MLPredictor: load trained models, predictions, accuracy assessment, interpretation.
 - MLModelTrainer: training new models, tuning hyperparameters, cross-validation.
+
+### Rule Engine
+
+- Load and manage basic and custom rules (dictionary_rules.txt, brute_force_rules.txt).
+- Applying rules to dictionaries: generation of new word combinations, filtering, etc.
+
+### Monitoring and logging
+
+- Logger: several levels (TRACE, DEBUG, INFO, WARNING, ERROR), JSON/XML export support, integration with remote services (AWS CloudWatch, Zabbix, Nagios).
+- Monitor: collection of metrics (GPU load, memory, temperature), real-time log analysis, notifications.
+
+### NotificationUtils
+
+- Send notifications via email (SMTP), SMS (Twilio), push (FCM), etc.
+- Logging of successful/unsuccessful attempts.
+- Integration with Config for parameters (SMTP server, tokens, API keys).
+
+### Scheduler
+
+- Scheduling periodic tasks: database backup, log cleanup, launching test attacks, notifications.
+- Complex scheduling templates.
+- Managing dependencies between tasks, generating reports.
+
+
+### User management
+
+- Create/delete accounts, assign roles, activate/deactivate.
+- 2FA support (QR codes, TOTP), password recovery.
+- Export/import users (CSV), detailed reports.
+
+### CloudIntegration / CloudUtils
+
+- Upload/download files from the cloud (AWS S3, GCS, Azure).
+- Asynchronous methods for large files (std::future).
+- Encryption/decryption before transfer.
+- Caching, logging.
+
+### DataUtils
+
+- Serialization/deserialization of JSON, XML, YAML.
+- Data structure validation, filtering, sorting.
+- Format conversion for export/import.
