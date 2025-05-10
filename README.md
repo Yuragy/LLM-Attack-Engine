@@ -1,6 +1,6 @@
 Сentralized framework for launching and managing a wide range of password attacks (dictionary, brute force, masks, rules and others), with CLI and web panel, monitoring, task scheduler, cloud integration and ML modules to improve efficiency.
 
-### Features
+### Features ⬇️
 - Various attack methods: dictionary attacks, brute force, masks, rules, etc.
 - Dictionary and rule management: support for downloading dictionaries, applying custom and leaked dictionaries, and flexible RuleEngine.
 - Web interface: easy-to-use web panel for customizing attacks, viewing logs, and scheduling tasks.
@@ -116,7 +116,7 @@ In the web interface are available:
 - ThreadingUtils: multithreaded task distribution, prioritized queues, scheduling strategies.
 - GPUUtils: interaction with NVML, task allocation to GPUs, collection of load, temperature, memory metrics.
 
-Some parts of the project are intentionally cut out to avoid illegal use. This is a demonstration of the use of ML models in a centralized tool for sophisticated attacks.
+⚠️ Some parts of the project are intentionally cut out to avoid illegal use. This is a demonstration of the use of ML models in a centralized tool for sophisticated attacks.
 
 ## Example of the attack process
 
