@@ -29,7 +29,7 @@ Allows you to launch attacks, manage configuration, dictionaries, view logs and 
 
 - Start the web server:  ./password_attack_framework --start-web
 
-Then open http://localhost:8080 in a browser (the port can be specified in the configuration). 
+ 🛜 Then open http://localhost:8080 in a browser (the port can be specified in the configuration). 
 
 ## Configuration
 All configuration files are located in the config/ folder:
